@@ -1,0 +1,35 @@
+:root{color-scheme:light;font:16px system-ui,sans-serif;color:#13283d;background:#f4f7fa}
+*{box-sizing:border-box}
+body{margin:0}
+.wrap{width:min(100% - 2rem,56rem);margin-inline:auto}
+header{background:#13283d;color:white;padding:2rem 0}
+header p{margin:.4rem 0;color:#dce7f5}
+.eyebrow{font-size:.76rem;font-weight:700;letter-spacing:.14em}
+h1{margin:.25rem 0;font-size:clamp(2rem,7vw,3rem);letter-spacing:-.045em}
+main{padding:1.25rem 0 3rem}
+.filters,.card,.acciones{display:flex;gap:.65rem}
+.filters label{flex:1;min-width:0;font-size:.82rem;font-weight:700}
+select{display:block;width:100%;margin-top:.3rem;background:white;border:1px solid #a7b9cd;color:inherit;border-radius:.5rem;min-height:44px;padding:.45rem;font:inherit}
+#resultado,#contexto{color:#4a617a;font-size:.85rem}
+.grupo{margin-bottom:1.6rem}
+.grupo h2{font-size:1.35rem;margin:.65rem 0}
+.card{align-items:center;justify-content:space-between;background:white;border:1px solid #d9e3ee;border-radius:.75rem;padding:.8rem;margin-bottom:.55rem}
+.estacion{min-width:0}
+.dia{color:#215b98;font-size:.75rem;font-weight:750}
+h3{margin:.2rem 0;font-size:.95rem;line-height:1.35}
+button,a.primario{cursor:pointer;font:inherit}
+.acciones>*{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.55rem .75rem;border-radius:.5rem;font-size:.85rem;font-weight:700;white-space:nowrap}
+.primario{border:1px solid #174e8b;background:#174e8b;color:white;text-decoration:none}
+.secundario{background:#edf4fc;border:1px solid #c8d9ed;color:#174e8b}
+:focus-visible{outline:3px solid #c96917;outline-offset:3px}
+dialog{width:min(100% - 1.5rem,36rem);max-height:calc(100dvh - 2rem);border:0;border-radius:1rem;padding:1.15rem;color:inherit;box-shadow:0 16px 55px #050e2266}
+dialog::backdrop{background:#071d36a8}
+.dialog-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.close{min-width:44px;min-height:44px;border:0;border-radius:.55rem;background:#edf4fc;color:#13283d;font-size:1.5rem}
+dialog h2{margin:.3rem 0 1rem;font-size:1.35rem}
+dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+dl div{background:#f1f6fc;padding:.65rem;border-radius:.5rem;overflow-wrap:anywhere}
+.wide{grid-column:1/-1}
+dt{font-size:.76rem;font-weight:750;color:#215b98}
+dd{margin:.25rem 0 0;font-size:.88rem}
+@media(max-width:580px){.card{align-items:stretch;flex-direction:column}.acciones>*{flex:1}}

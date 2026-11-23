@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#13283d">
+<title>Rutas del Equipo 2 | Trujillo</title>
+<link rel="stylesheet" href="estilos.css">
+<script defer src="datos.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<header><div class="wrap"><p class="eyebrow">TRUJILLO / EQUIPO 2</p><h1>Rutas de visita</h1><p>25 establecimientos · 15 días</p></div></header>
+<main class="wrap">
+<section class="filters" aria-label="Filtros de visitas">
+<label>Provincia<select id="provincia"><option value="">Todas las provincias</option></select></label>
+<label>Día<select id="dia"><option value="">Todos los días</option></select></label>
+</section>
+<p id="resultado" role="status"></p>
+<div id="rutas"></div>
+</main>
+<dialog id="detalle" aria-labelledby="titulo-detalle">
+<div class="dialog-head"><p id="contexto"></p><form method="dialog"><button class="close" aria-label="Cerrar detalle" autofocus>×</button></form></div>
+<h2 id="titulo-detalle"></h2>
+<dl id="datos"></dl>
+</dialog>
+</body>
+</html>
