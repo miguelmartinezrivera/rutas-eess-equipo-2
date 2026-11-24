@@ -1,4 +1,4 @@
-const visitas = [
+export const visitas = [
   {
     "codigo": "00005349",
     "nombre": "HOSPITAL DE APOYO LEONCIO PRADO",

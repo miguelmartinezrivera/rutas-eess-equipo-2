@@ -6,11 +6,10 @@
 <meta name="theme-color" content="#13283d">
 <title>Rutas del Equipo 2 | Trujillo</title>
 <link rel="stylesheet" href="estilos.css">
-<script defer src="datos.js"></script>
-<script defer src="app.js"></script>
+<script type="module" src="app.js"></script>
 </head>
 <body>
-<header><div class="wrap"><p class="eyebrow">TRUJILLO / EQUIPO 2</p><h1>Rutas de visita</h1><p>25 establecimientos · 15 días</p></div></header>
+<header><div class="wrap"><p class="eyebrow">TRUJILLO / EQUIPO 2</p><h1>Rutas de visita</h1><p>25 establecimientos · 15 días</p><button class="secundario acceso" id="acceso-equipo" type="button">Ingresar como integrante</button></div></header>
 <main class="wrap">
 <section class="filters" aria-label="Filtros de visitas">
 <label>Provincia<select id="provincia"><option value="">Todas las provincias</option></select></label>
@@ -23,6 +22,10 @@
 <div class="dialog-head"><p id="contexto"></p><form method="dialog"><button class="close" aria-label="Cerrar detalle" autofocus>×</button></form></div>
 <h2 id="titulo-detalle"></h2>
 <dl id="datos"></dl>
+</dialog>
+<dialog id="dialogo-campo" aria-labelledby="titulo-campo">
+<div class="dialog-head"><h2 id="titulo-campo"></h2><form method="dialog"><button class="close" aria-label="Cerrar levantamiento">×</button></form></div>
+<div id="contenido-campo"></div>
 </dialog>
 </body>
 </html>

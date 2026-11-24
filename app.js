@@ -1,3 +1,6 @@
+import { visitas } from './datos.js';
+import { abrirConsolidado, abrirLevantamiento, iconoEquipo, textoAvance } from './levantamiento.js';
+
 const provincia = document.querySelector('#provincia');
 const dia = document.querySelector('#dia');
 const rutas = document.querySelector('#rutas');
@@ -31,7 +34,7 @@ function mostrarDetalle(visita) {
     ['Red', visita.red], ['Microred', visita.microred],
     ['Dirección', visita.direccion], ['Director del establecimiento', visita.director],
     ['Responsable de TI', visita.ti], ['HIS / PAC', visita.his],
-    ['Estado del levantamiento', visita.estado]
+    ['Estado del levantamiento', textoAvance(visita.codigo) || visita.estado]
   ];
   const datos = document.querySelector('#datos');
   datos.replaceChildren();
@@ -48,6 +51,8 @@ function tarjeta(visita) {
   const titulo = elemento('div', '', 'estacion');
   titulo.append(elemento('span', 'Día ' + formatoDia(visita.dia), 'dia'),
     elemento('h3', visita.nombre));
+  const progreso = textoAvance(visita.codigo);
+  if (progreso) titulo.append(elemento('small', progreso, 'avance'));
   const acciones = elemento('div', '', 'acciones');
   const ver = elemento('button', 'Ver detalle', 'secundario');
   ver.type = 'button';
@@ -58,8 +63,17 @@ function tarjeta(visita) {
   llegar.href = 'https://www.google.com/maps/dir/?' + params;
   llegar.target = '_blank';
   llegar.rel = 'noopener noreferrer';
-  acciones.append(ver, llegar);
-  card.append(titulo, acciones);
+  const registrar = elemento('button', 'Registrar levantamiento', 'secundario');
+  registrar.type = 'button';
+  registrar.addEventListener('click', () => abrirLevantamiento(visita));
+  acciones.append(ver, llegar, registrar);
+  const equipos = elemento('button', '', 'secundario boton-consolidado');
+  equipos.type = 'button';
+  equipos.append(iconoEquipo('pc_actual'), elemento('span', 'Validación de equipos informáticos'));
+  equipos.addEventListener('click', () => abrirConsolidado(visita));
+  const accionesEstablecimiento = elemento('div', '', 'acciones-establecimiento');
+  accionesEstablecimiento.append(acciones, equipos);
+  card.append(titulo, accionesEstablecimiento);
   return card;
 }
 
@@ -79,5 +93,6 @@ function renderizar() {
 
 provincia.addEventListener('change', () => { actualizarDias(); renderizar(); });
 dia.addEventListener('change', renderizar);
+document.addEventListener('avance-equipo', renderizar);
 actualizarDias();
 renderizar();

@@ -1,0 +1,6 @@
+/source/
+/.env*
+/.vercel/
+/node_modules/
+/dist/
+/supabase/.temp/

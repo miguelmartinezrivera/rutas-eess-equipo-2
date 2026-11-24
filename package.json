@@ -1,0 +1,19 @@
+{
+  "name": "eess-equipo2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node --env-file-if-exists=.env.local scripts/dev.mjs",
+    "migrar:mysql": "node --env-file-if-exists=.env.local scripts/migrar-sqlite-mysql.mjs",
+    "mysql:xampp": "node --env-file-if-exists=.env.local scripts/mysql-xampp.mjs"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.10",
+    "esbuild": "^0.28.2",
+    "jszip": "^3.10.1",
+    "mysql2": "^3.24.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
