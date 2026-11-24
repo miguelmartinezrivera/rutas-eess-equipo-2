@@ -1,4 +1,4 @@
-import { areas, bloquesBase, camposEquipamiento, definirBloque, esAmbiente, fotosPanel, normalizarNombreAmbiente, ordenFicha, secciones } from './campos.js';
+import { areas, bloquesBase, camposEquipamiento, camposFotosAmbiente, definirBloque, esAmbiente, fotosPanel, normalizarNombreAmbiente, ordenFicha, secciones } from './campos.js';
 
 const dialogo = document.querySelector('#dialogo-campo');
 const titulo = document.querySelector('#titulo-campo');
@@ -420,10 +420,10 @@ function mostrarFicha(visita, { registros, referencia }, montarFicha) {
       unidad: 'parámetros'
     } : null;
     if (clave === 'fotos') {
-      const requeridas = fotosPanel.filter(({ requerida }) => requerida);
+      const requeridas = [fotosPanel[0].foto, ...ambientes.flatMap(({ bloque }) => camposFotosAmbiente(bloque))];
       avanceSeccion = {
         total: requeridas.length,
-        llenados: requeridas.filter(({ foto }) => datos[foto.id]).length,
+        llenados: requeridas.filter(({ id }) => datos[id]).length,
         unidad: 'fotos'
       };
     }
@@ -436,7 +436,7 @@ function mostrarFicha(visita, { registros, referencia }, montarFicha) {
       equipamiento,
       avanceSeccion,
       montarFormulario: avanceSeccion ? contenedor => {
-        if (contenedor) editar(visita, clave, registro, contenedor);
+        if (contenedor) editar(visita, clave, registro, contenedor, ambientes);
       } : null,
       asignado: registro?.asignado_a ? nombrePersona(registro.asignado_a) : '',
       auditoria: auditoria(registro),
@@ -608,11 +608,19 @@ async function abrirImagen(visita, ruta, estado) {
   }
 }
 
-function valores(visita, clave, registro, estado) {
+function valores(visita, clave, registro, estado, ambientes = []) {
   const lista = nodo('dl');
   const datos = clave === 'generales' ? { ...visita, ...registro.datos } : registro.datos;
   const inventario = esAmbiente(clave);
-  for (const campo of definirBloque(clave).campos) {
+  const campos = [...definirBloque(clave).campos];
+  if (clave === 'fotos') {
+    for (const { bloque, ambiente } of ambientes) {
+      for (const campo of camposFotosAmbiente(bloque)) {
+        if (datos[campo.id]) campos.push({ ...campo, etiqueta: ambiente + ' · ' + campo.etiqueta });
+      }
+    }
+  }
+  for (const campo of campos) {
     const dato = datos[campo.id];
     const item = nodo('div', '', inventario && campo.id === 'observaciones' ? 'wide' : '');
     item.append(etiquetarCampo(nodo('dt'), campo, inventario));
@@ -698,10 +706,8 @@ function observacionParametro(parametro, campo, { label, input }) {
   return pie;
 }
 
-function camposPanelFotografico(visita, panel, inicial) {
-  const adicionales = nodo('details', '', 'fotos-adicionales');
-  adicionales.append(nodo('summary', 'Fotos adicionales'));
-  const controles = fotosPanel.flatMap(({ requerida, foto, ambiente }) => {
+function camposPanelFotografico(visita, panel, inicial, ambientes) {
+  function agregarTarjeta(grupo, foto, ambiente) {
     const tarjeta = nodo('div', '', 'tarjeta-foto');
     const encabezado = nodo('h4', '', 'leyenda-equipo');
     encabezado.append(iconoEquipo('camara'), nodo('span', foto.etiqueta));
@@ -709,7 +715,7 @@ function camposPanelFotografico(visita, panel, inicial) {
     tarjeta.setAttribute('role', 'group');
     tarjeta.setAttribute('aria-labelledby', encabezado.id);
 
-    const ubicacion = entrada(ambiente, inicial[ambiente.id]);
+    const ubicacion = ambiente && entrada(ambiente, inicial[ambiente.id]);
     const input = nodo('input', '', 'selector-foto');
     input.type = 'file';
     input.accept = 'image/*';
@@ -812,17 +818,39 @@ function camposPanelFotografico(visita, panel, inicial) {
     input.addEventListener('change', seleccionarFoto);
     camara.addEventListener('change', seleccionarFoto);
     acciones.append(tomar, adjuntar, guardarEnGaleria, verFoto, cambiarSeleccion);
-    tarjeta.append(encabezado, estadoFoto, vistaPrevia, acciones, estadoCopia, input, camara, ubicacion.label);
-    (requerida ? panel : adicionales).append(tarjeta);
-    if (!requerida && (ruta || inicial[ambiente.id])) adicionales.open = true;
+    tarjeta.append(encabezado, estadoFoto, vistaPrevia, acciones, estadoCopia, input, camara);
+    if (ubicacion) tarjeta.append(ubicacion.label);
+    grupo.append(tarjeta);
     actualizarFoto();
-    return [{ campo: ambiente, ...ubicacion }, controlFoto];
-  });
-  panel.append(adicionales);
+    return ubicacion ? [{ campo: ambiente, ...ubicacion }, controlFoto] : [controlFoto];
+  }
+
+  const [exterior, ...anteriores] = fotosPanel;
+  const controles = agregarTarjeta(panel, exterior.foto, exterior.ambiente);
+  if (!ambientes.length) panel.append(nodo('p', 'Agrega ambientes en la sección II para registrar sus fotos.', 'contexto-ficha'));
+  for (const { bloque, ambiente } of ambientes) {
+    const campos = camposFotosAmbiente(bloque);
+    const guardadas = campos.filter(({ id }) => inicial[id]).length;
+    const grupo = nodo('details', '', 'grupo-fotos');
+    const resumen = nodo('summary');
+    resumen.append(nodo('span', ambiente), nodo('span', guardadas + ' de ' + campos.length + ' fotos', 'estado-ficha'));
+    const tarjetas = nodo('div', '', 'tarjetas-fotos');
+    grupo.append(resumen, tarjetas);
+    for (const foto of campos) controles.push(...agregarTarjeta(tarjetas, foto));
+    panel.append(grupo);
+  }
+  const fotosAnteriores = anteriores.filter(({ foto, ambiente }) => inicial[foto.id] || inicial[ambiente.id]);
+  if (fotosAnteriores.length) {
+    const grupo = nodo('details', '', 'grupo-fotos');
+    const tarjetas = nodo('div', '', 'tarjetas-fotos');
+    grupo.append(nodo('summary', 'Fotos anteriores'), tarjetas);
+    for (const { foto, ambiente } of fotosAnteriores) controles.push(...agregarTarjeta(tarjetas, foto, ambiente));
+    panel.append(grupo);
+  }
   return controles;
 }
 
-function editar(visita, clave, registro, contenedor) {
+function editar(visita, clave, registro, contenedor, ambientes = []) {
   const definicion = definirBloque(clave);
   const inventario = esAmbiente(clave);
   const form = nodo('form', '', inventario ? 'form-campo form-equipamiento' : 'form-campo');
@@ -834,11 +862,12 @@ function editar(visita, clave, registro, contenedor) {
   const estado = aviso();
   const base = clave === 'generales' ? visita : {};
   const inicial = { ...base, ...registro?.datos };
+  let fotosGuardadas = inicial;
   const panelFotos = clave === 'fotos' ? nodo('fieldset', '', 'panel-fotos') : null;
   if (panelFotos) form.append(panelFotos);
   let tarjetaParametro;
   let nombreParametro;
-  const campos = panelFotos ? camposPanelFotografico(visita, panelFotos, inicial) : definicion.campos.map(campo => {
+  const campos = panelFotos ? camposPanelFotografico(visita, panelFotos, inicial, ambientes) : definicion.campos.map(campo => {
     const esParametro = contenedor && campo.id.startsWith('existente_');
     if (esParametro) nombreParametro = campo.etiqueta;
     const etiqueta = contenedor ? (esParametro ? 'Existente' : nombreParametro) : campo.etiqueta;
@@ -920,12 +949,13 @@ function editar(visita, clave, registro, contenedor) {
     if (panelFotos) panelFotos.disabled = true;
     estado.textContent = 'Guardando…';
     try {
-      const datos = {};
+      const datos = panelFotos ? { ...fotosGuardadas } : {};
       if (clave === 'generales' && confirmar.checked) datos.confirmado = true;
       for (const control of campos) {
         const { campo, input, quitar } = control;
         if (campo.tipo === 'image') {
           const archivo = input.files[0];
+          if (panelFotos && !archivo && !quitar?.checked) continue;
           if (archivo && archivo !== control.archivo) {
             const imagen = await prepararImagen(archivo);
             const res = await api('adjunto', { codigo: visita.codigo, body: { imagen } });
@@ -933,9 +963,14 @@ function editar(visita, clave, registro, contenedor) {
             control.archivo = archivo;
           }
           if (archivo) datos[campo.id] = control.rutaSubida;
+          else if (panelFotos) delete datos[campo.id];
           else if (control.ruta && !quitar?.checked) datos[campo.id] = control.ruta;
         } else {
           const valor = input.value.trim();
+          if (panelFotos) {
+            if (valor === (inicial[campo.id] ?? '')) continue;
+            if (!valor) delete datos[campo.id];
+          }
           const baseValor = String(base[campo.id] ?? '').trim();
           if (clave === 'generales' ? valor !== baseValor : valor !== '') {
             datos[campo.id] = campo.tipo === 'number' ? Number(valor) : valor;
@@ -955,10 +990,11 @@ function editar(visita, clave, registro, contenedor) {
         estado.textContent = 'Existe una versión más reciente. Revisa sus datos antes de guardar.';
         conflicto.hidden = false;
         conflicto.replaceChildren(nodo('h3', 'Versión guardada'), nodo('p', auditoria(actual)),
-          valores(visita, clave, actual, estado),
-          boton('Usar la versión guardada', () => editar(visita, clave, actual, contenedor)),
+          valores(visita, clave, actual, estado, ambientes),
+          boton('Usar la versión guardada', () => editar(visita, clave, actual, contenedor, ambientes)),
           boton('Conservar mi edición después de revisar', () => {
             version = actual.version;
+            if (panelFotos) fotosGuardadas = actual.datos;
             conflicto.hidden = true;
             estado.textContent = 'Tu edición sigue abierta. Pulsa Guardar para aplicar tus cambios.';
             guardar.disabled = false;

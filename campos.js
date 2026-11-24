@@ -40,6 +40,23 @@ export const fotosPanel = Array.from({ length: 8 }, (_, indice) => ({
   ambiente: campo('ambiente_' + indice, 'Área o ubicación')
 }));
 
+const fotosPorAmbiente = {
+  exterior: 'Exterior del área',
+  interior: 'Interior del área',
+  cable: 'Recorrido del cable de red'
+};
+
+export function camposFotosAmbiente(bloque) {
+  return Object.entries(fotosPorAmbiente).map(([tipo, etiqueta]) =>
+    campo('foto_' + tipo + '_' + bloque, etiqueta, 'image'));
+}
+
+export function definirFotoAmbiente(id) {
+  const partes = /^foto_(exterior|interior|cable)_(.+)$/.exec(id);
+  if (!partes || !esAmbiente(partes[2])) return null;
+  return campo(id, fotosPorAmbiente[partes[1]], 'image');
+}
+
 export const secciones = {
   generales: { nombre: 'Datos generales y logísticos', campos: [
     campo('nombre', 'Establecimiento', 'text', 'B5'),

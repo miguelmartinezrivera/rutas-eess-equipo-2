@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { pipeline } from 'node:stream/promises';
 import { visitas } from '../datos.js';
-import { areas, definirBloque, esAmbiente, normalizarNombreAmbiente } from '../campos.js';
+import { areas, definirBloque, definirFotoAmbiente, esAmbiente, normalizarNombreAmbiente } from '../campos.js';
 import { generarExcel } from '../lib/xlsx.mjs';
 import { correoDeUsuario } from '../lib/acceso.mjs';
 
@@ -52,7 +53,7 @@ function validarRegistro(codigo, solicitud) {
   const campos = new Map(definicion.campos.map(campo => [campo.id, campo]));
   for (const [id, valor] of Object.entries(datos)) {
     if (bloque === 'generales' && id === 'confirmado' && valor === true) continue;
-    const campo = campos.get(id);
+    const campo = campos.get(id) ?? (bloque === 'fotos' ? definirFotoAmbiente(id) : null);
     const valido = campo && (
       campo.tipo === 'number' ? Number.isSafeInteger(valor) && valor >= 0 && valor <= 2147483647 :
         campo.tipo === 'image' ? rutaAdjunto(valor, codigo) :
@@ -258,14 +259,15 @@ export async function atenderCampo(req, res, proveedor = clienteSupabase) {
     const archivo = await generarExcel(await original.arrayBuffer(), registros, async imagen => {
       if (!rutaAdjunto(imagen, codigo)) throw new ErrorCampo(400, 'La ficha contiene una ruta de imagen inválida.');
       return (await privado(supabase, 'equipo2-adjuntos', imagen)).arrayBuffer();
-    });
+    }, true);
     res.writeHead(200, {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': 'attachment; filename="' + ruta.split('/').at(-1) + '"'
     });
-    return res.end(archivo);
+    return await pipeline(archivo, res);
   } catch (error) {
     if (!error.status || error.status >= 500 && !(error instanceof ErrorCampo)) console.error(error);
+    if (res.headersSent || res.destroyed) return;
     return json(res, error.status ?? 500, { error: error.status ? error.message : 'La solicitud no pudo completarse.' });
   }
 }
