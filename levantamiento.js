@@ -698,7 +698,7 @@ function observacionParametro(parametro, campo, { label, input }) {
   return pie;
 }
 
-function camposPanelFotografico(visita, panel, inicial, estado) {
+function camposPanelFotografico(visita, panel, inicial) {
   const adicionales = nodo('details', '', 'fotos-adicionales');
   adicionales.append(nodo('summary', 'Fotos adicionales'));
   const controles = fotosPanel.flatMap(({ requerida, foto, ambiente }) => {
@@ -725,6 +725,7 @@ function camposPanelFotografico(visita, panel, inicial, estado) {
     const estadoCopia = aviso();
     const acciones = nodo('div', '', 'controles-campo');
     let revision = 0;
+    let archivoGuardado;
 
     function mostrarFoto(blob) {
       const imagen = nodo('img');
@@ -743,20 +744,24 @@ function camposPanelFotografico(visita, panel, inicial, estado) {
     tomar.prepend(iconoEquipo('camara'));
     const adjuntar = boton('Adjuntar imagen', () => input.click(), 'secundario leyenda-equipo');
     adjuntar.prepend(iconoEquipo('adjuntar'));
-    const guardarCopia = boton('Guardar copia', async () => {
-      const [archivo] = camara.files;
+    const guardarEnGaleria = boton('Guardar en galería', async () => {
+      const archivo = camara.files[0] || archivoGuardado;
       if (!archivo) return;
       const datos = { files: [archivo] };
-      if (navigator.canShare?.(datos)) {
-        try {
-          await navigator.share(datos);
-          return;
-        } catch (error) {
-          if (error.name === 'AbortError' || camara.files[0] !== archivo) return;
+      if (!navigator.canShare?.(datos)) {
+        estadoCopia.textContent = window.isSecureContext
+          ? 'Este navegador no puede abrir el menú para esta foto. Para guardar futuras tomas en la galería, usa la app Cámara y luego adjunta la imagen.'
+          : 'Abre el sistema por HTTPS para guardar en la galería. En la red local, toma la foto con la app Cámara y luego adjúntala aquí.';
+        return;
+      }
+      estadoCopia.textContent = 'Elige «Guardar imagen» en el menú del celular si está disponible.';
+      try {
+        await navigator.share(datos);
+      } catch (error) {
+        if (error.name !== 'AbortError' && archivo === (camara.files[0] || archivoGuardado)) {
+          estadoCopia.textContent = 'No se pudo abrir el menú del celular. Vuelve a pulsar «Guardar en galería».';
         }
       }
-      guardarArchivo(archivo, archivo.name);
-      estadoCopia.textContent = 'Busca la copia en Descargas. En iPhone, puedes moverla a Fotos desde Archivos.';
     });
     const verFoto = boton('Ver foto guardada', async () => {
       const solicitud = ++revision;
@@ -765,13 +770,14 @@ function camposPanelFotografico(visita, panel, inicial, estado) {
         const res = await api('imagen', { codigo: visita.codigo, ruta });
         const blob = await res.blob();
         if (solicitud !== revision || !tarjeta.isConnected) return;
+        archivoGuardado = new File([blob], foto.id + '.jpg', { type: 'image/jpeg' });
+        guardarEnGaleria.hidden = false;
         mostrarFoto(blob);
         estadoFoto.textContent = 'Foto guardada';
       } catch (error) {
         if (solicitud === revision) estadoFoto.textContent = error.message;
       }
     });
-    const descargar = boton('Descargar foto', () => abrirImagen(visita, ruta, estado));
     const cambiarSeleccion = boton('', () => {
       if (controlFoto.input.files[0]) controlFoto.input.value = '';
       else quitar.checked = !quitar.checked;
@@ -780,13 +786,14 @@ function camposPanelFotografico(visita, panel, inicial, estado) {
 
     function actualizarFoto() {
       revision += 1;
+      archivoGuardado = undefined;
       vistaPrevia.replaceChildren();
       estadoCopia.textContent = '';
       const archivo = controlFoto.input.files[0];
       const guardada = Boolean(ruta && !quitar.checked);
       tarjeta.dataset.llenado = String(Boolean(archivo || guardada));
-      guardarCopia.hidden = !camara.files[0];
-      verFoto.hidden = descargar.hidden = Boolean(archivo) || !guardada;
+      guardarEnGaleria.hidden = !camara.files[0];
+      verFoto.hidden = Boolean(archivo) || !guardada;
       cambiarSeleccion.hidden = !archivo && !ruta;
       cambiarSeleccion.textContent = archivo ? 'Cancelar selección' :
         quitar.checked ? 'Restaurar foto' : 'Quitar foto';
@@ -804,7 +811,7 @@ function camposPanelFotografico(visita, panel, inicial, estado) {
     }
     input.addEventListener('change', seleccionarFoto);
     camara.addEventListener('change', seleccionarFoto);
-    acciones.append(tomar, adjuntar, guardarCopia, verFoto, descargar, cambiarSeleccion);
+    acciones.append(tomar, adjuntar, guardarEnGaleria, verFoto, cambiarSeleccion);
     tarjeta.append(encabezado, estadoFoto, vistaPrevia, acciones, estadoCopia, input, camara, ubicacion.label);
     (requerida ? panel : adicionales).append(tarjeta);
     if (!requerida && (ruta || inicial[ambiente.id])) adicionales.open = true;
@@ -831,7 +838,7 @@ function editar(visita, clave, registro, contenedor) {
   if (panelFotos) form.append(panelFotos);
   let tarjetaParametro;
   let nombreParametro;
-  const campos = panelFotos ? camposPanelFotografico(visita, panelFotos, inicial, estado) : definicion.campos.map(campo => {
+  const campos = panelFotos ? camposPanelFotografico(visita, panelFotos, inicial) : definicion.campos.map(campo => {
     const esParametro = contenedor && campo.id.startsWith('existente_');
     if (esParametro) nombreParametro = campo.etiqueta;
     const etiqueta = contenedor ? (esParametro ? 'Existente' : nombreParametro) : campo.etiqueta;
