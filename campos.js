@@ -27,6 +27,19 @@ function parametros(etiquetas, filaInicial) {
   });
 }
 
+const categoriasFoto = [
+  'Exterior del centro de salud',
+  'Área',
+  'Interior del área',
+  'Recorrido del cable de red'
+];
+
+export const fotosPanel = Array.from({ length: 8 }, (_, indice) => ({
+  requerida: indice < categoriasFoto.length,
+  foto: campo('foto_' + indice, categoriasFoto[indice] ?? 'Foto adicional ' + (indice - categoriasFoto.length + 1), 'image'),
+  ambiente: campo('ambiente_' + indice, 'Área o ubicación')
+}));
+
 export const secciones = {
   generales: { nombre: 'Datos generales y logísticos', campos: [
     campo('nombre', 'Establecimiento', 'text', 'B5'),
@@ -67,10 +80,7 @@ export const secciones = {
   plano: { nombre: 'Plano de distribución de red de datos', campos: [
     campo('plano', 'Imagen del plano', 'image')
   ] },
-  fotos: { nombre: 'Panel fotográfico', campos: Array.from({ length: 8 }, (_, indice) => [
-    campo('ambiente_' + indice, 'Área / ambiente de la foto ' + (indice + 1)),
-    campo('foto_' + indice, 'Foto ' + (indice + 1), 'image')
-  ]).flat() }
+  fotos: { nombre: 'Panel fotográfico', campos: fotosPanel.flatMap(({ ambiente, foto }) => [ambiente, foto]) }
 };
 
 export const ordenFicha = ['generales', 'equipamiento', 'red', 'electricidad', 'conformidad', 'plano', 'fotos'];

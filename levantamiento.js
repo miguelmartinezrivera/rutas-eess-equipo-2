@@ -1,4 +1,4 @@
-import { areas, bloquesBase, camposEquipamiento, definirBloque, esAmbiente, normalizarNombreAmbiente, ordenFicha, secciones } from './campos.js';
+import { areas, bloquesBase, camposEquipamiento, definirBloque, esAmbiente, fotosPanel, normalizarNombreAmbiente, ordenFicha, secciones } from './campos.js';
 
 const dialogo = document.querySelector('#dialogo-campo');
 const titulo = document.querySelector('#titulo-campo');
@@ -23,7 +23,9 @@ const iconosEquipamiento = {
   impresora: 'M6 9V3h12v6M6 17H3V9h18v8h-3M6 14h12v7H6zM17 11.5h1',
   huella: 'M4 11a8 8 0 0 1 16 0v2M7 11a5 5 0 0 1 10 0v3a14 14 0 0 1-1 5M10 11a2 2 0 1 1 4 0v3a13 13 0 0 1-2.2 7M7 14v1a8 8 0 0 1-1 4m4-5v1a10 10 0 0 1-1.6 6M20 16l-.5 2',
   dnie: 'M3 5h18v14H3zM7 10a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm-1 6a3 3 0 0 1 6 0m3-6h3m-3 4h3',
-  observaciones: 'M5 3h10l4 4v14H5zM15 3v5h4M8 12h8m-8 4h8'
+  observaciones: 'M5 3h10l4 4v14H5zM15 3v5h4M8 12h8m-8 4h8',
+  camara: 'M3 7h4l2-3h6l2 3h4v13H3zM15.5 13a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z',
+  adjuntar: 'M8 12l6.5-6.5a3.2 3.2 0 0 1 4.5 4.5l-9 9a5 5 0 0 1-7-7l9-9m-5.5 13 8-8'
 };
 
 function nodo(etiqueta, texto = '', clase = '') {
@@ -412,19 +414,28 @@ function mostrarFicha(visita, { registros, referencia }, montarFicha) {
       equipamiento = { llenados, total: cantidades.length, observaciones: datos.observaciones?.trim() || '' };
     }
     const parametros = definicion.campos.filter(campo => campo.id.startsWith('existente_'));
-    const avanceParametros = parametros.length ? {
+    let avanceSeccion = parametros.length ? {
       total: parametros.length,
-      llenados: parametros.filter(({ id }) => datos[id]?.trim()).length
+      llenados: parametros.filter(({ id }) => datos[id]?.trim()).length,
+      unidad: 'parámetros'
     } : null;
+    if (clave === 'fotos') {
+      const requeridas = fotosPanel.filter(({ requerida }) => requerida);
+      avanceSeccion = {
+        total: requeridas.length,
+        llenados: requeridas.filter(({ foto }) => datos[foto.id]).length,
+        unidad: 'fotos'
+      };
+    }
     return {
       clave,
       nombre: registro?.ambiente ?? definicion.nombre,
       registrado,
-      completo: avanceParametros ? avanceParametros.llenados === avanceParametros.total :
+      completo: avanceSeccion ? avanceSeccion.llenados === avanceSeccion.total :
         equipamiento ? equipamiento.llenados === equipamiento.total : registrado,
       equipamiento,
-      avanceParametros,
-      montarFormulario: avanceParametros ? contenedor => {
+      avanceSeccion,
+      montarFormulario: avanceSeccion ? contenedor => {
         if (contenedor) editar(visita, clave, registro, contenedor);
       } : null,
       asignado: registro?.asignado_a ? nombrePersona(registro.asignado_a) : '',
@@ -687,6 +698,123 @@ function observacionParametro(parametro, campo, { label, input }) {
   return pie;
 }
 
+function camposPanelFotografico(visita, panel, inicial, estado) {
+  const adicionales = nodo('details', '', 'fotos-adicionales');
+  adicionales.append(nodo('summary', 'Fotos adicionales'));
+  const controles = fotosPanel.flatMap(({ requerida, foto, ambiente }) => {
+    const tarjeta = nodo('div', '', 'tarjeta-foto');
+    const encabezado = nodo('h4', '', 'leyenda-equipo');
+    encabezado.append(iconoEquipo('camara'), nodo('span', foto.etiqueta));
+    encabezado.id = 'titulo-' + foto.id;
+    tarjeta.setAttribute('role', 'group');
+    tarjeta.setAttribute('aria-labelledby', encabezado.id);
+
+    const ubicacion = entrada(ambiente, inicial[ambiente.id]);
+    const input = nodo('input', '', 'selector-foto');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.hidden = true;
+    const camara = input.cloneNode();
+    camara.setAttribute('capture', 'environment');
+    const quitar = nodo('input');
+    quitar.type = 'checkbox';
+    const ruta = inicial[foto.id];
+    const controlFoto = { campo: foto, input, quitar, ruta };
+    const vistaPrevia = nodo('div', '', 'vista-foto');
+    const estadoFoto = aviso();
+    const estadoCopia = aviso();
+    const acciones = nodo('div', '', 'controles-campo');
+    let revision = 0;
+
+    function mostrarFoto(blob) {
+      const imagen = nodo('img');
+      imagen.alt = foto.etiqueta;
+      const url = URL.createObjectURL(blob);
+      imagen.src = url;
+      vistaPrevia.replaceChildren(imagen);
+      imagen.decode().catch(() => {
+        if (imagen.parentNode === vistaPrevia) {
+          vistaPrevia.replaceChildren(nodo('p', 'Vista previa no disponible.'));
+        }
+      }).finally(() => URL.revokeObjectURL(url));
+    }
+
+    const tomar = boton('Tomar foto', () => camara.click(), 'secundario leyenda-equipo');
+    tomar.prepend(iconoEquipo('camara'));
+    const adjuntar = boton('Adjuntar imagen', () => input.click(), 'secundario leyenda-equipo');
+    adjuntar.prepend(iconoEquipo('adjuntar'));
+    const guardarCopia = boton('Guardar copia', async () => {
+      const [archivo] = camara.files;
+      if (!archivo) return;
+      const datos = { files: [archivo] };
+      if (navigator.canShare?.(datos)) {
+        try {
+          await navigator.share(datos);
+          return;
+        } catch (error) {
+          if (error.name === 'AbortError' || camara.files[0] !== archivo) return;
+        }
+      }
+      guardarArchivo(archivo, archivo.name);
+      estadoCopia.textContent = 'Busca la copia en Descargas. En iPhone, puedes moverla a Fotos desde Archivos.';
+    });
+    const verFoto = boton('Ver foto guardada', async () => {
+      const solicitud = ++revision;
+      estadoFoto.textContent = 'Cargando foto…';
+      try {
+        const res = await api('imagen', { codigo: visita.codigo, ruta });
+        const blob = await res.blob();
+        if (solicitud !== revision || !tarjeta.isConnected) return;
+        mostrarFoto(blob);
+        estadoFoto.textContent = 'Foto guardada';
+      } catch (error) {
+        if (solicitud === revision) estadoFoto.textContent = error.message;
+      }
+    });
+    const descargar = boton('Descargar foto', () => abrirImagen(visita, ruta, estado));
+    const cambiarSeleccion = boton('', () => {
+      if (controlFoto.input.files[0]) controlFoto.input.value = '';
+      else quitar.checked = !quitar.checked;
+      actualizarFoto();
+    });
+
+    function actualizarFoto() {
+      revision += 1;
+      vistaPrevia.replaceChildren();
+      estadoCopia.textContent = '';
+      const archivo = controlFoto.input.files[0];
+      const guardada = Boolean(ruta && !quitar.checked);
+      tarjeta.dataset.llenado = String(Boolean(archivo || guardada));
+      guardarCopia.hidden = !camara.files[0];
+      verFoto.hidden = descargar.hidden = Boolean(archivo) || !guardada;
+      cambiarSeleccion.hidden = !archivo && !ruta;
+      cambiarSeleccion.textContent = archivo ? 'Cancelar selección' :
+        quitar.checked ? 'Restaurar foto' : 'Quitar foto';
+      estadoFoto.textContent = archivo ? 'Lista para guardar' :
+        guardada ? 'Foto guardada' : quitar.checked ? 'Se quitará al guardar' : 'Sin foto';
+      if (archivo) mostrarFoto(archivo);
+    }
+
+    function seleccionarFoto(evento) {
+      const origen = evento.currentTarget;
+      if (!origen.files[0]) return;
+      if (controlFoto.input !== origen) controlFoto.input.value = '';
+      controlFoto.input = origen;
+      actualizarFoto();
+    }
+    input.addEventListener('change', seleccionarFoto);
+    camara.addEventListener('change', seleccionarFoto);
+    acciones.append(tomar, adjuntar, guardarCopia, verFoto, descargar, cambiarSeleccion);
+    tarjeta.append(encabezado, estadoFoto, vistaPrevia, acciones, estadoCopia, input, camara, ubicacion.label);
+    (requerida ? panel : adicionales).append(tarjeta);
+    if (!requerida && (ruta || inicial[ambiente.id])) adicionales.open = true;
+    actualizarFoto();
+    return [{ campo: ambiente, ...ubicacion }, controlFoto];
+  });
+  panel.append(adicionales);
+  return controles;
+}
+
 function editar(visita, clave, registro, contenedor) {
   const definicion = definirBloque(clave);
   const inventario = esAmbiente(clave);
@@ -699,9 +827,11 @@ function editar(visita, clave, registro, contenedor) {
   const estado = aviso();
   const base = clave === 'generales' ? visita : {};
   const inicial = { ...base, ...registro?.datos };
+  const panelFotos = clave === 'fotos' ? nodo('fieldset', '', 'panel-fotos') : null;
+  if (panelFotos) form.append(panelFotos);
   let tarjetaParametro;
   let nombreParametro;
-  const campos = definicion.campos.map(campo => {
+  const campos = panelFotos ? camposPanelFotografico(visita, panelFotos, inicial, estado) : definicion.campos.map(campo => {
     const esParametro = contenedor && campo.id.startsWith('existente_');
     if (esParametro) nombreParametro = campo.etiqueta;
     const etiqueta = contenedor ? (esParametro ? 'Existente' : nombreParametro) : campo.etiqueta;
@@ -758,7 +888,7 @@ function editar(visita, clave, registro, contenedor) {
     form.append(label);
   }
   let version = registro?.version || 0;
-  const textoGuardar = { red: 'Guardar datos de red', electricidad: 'Guardar datos eléctricos' };
+  const textoGuardar = { red: 'Guardar datos de red', electricidad: 'Guardar datos eléctricos', fotos: 'Guardar fotos' };
   const guardar = nodo('button', textoGuardar[clave] ?? 'Guardar', 'primario');
   const conflicto = nodo('section', '', 'conflicto-campo');
   conflicto.hidden = true;
@@ -780,6 +910,7 @@ function editar(visita, clave, registro, contenedor) {
   form.addEventListener('submit', async evento => {
     evento.preventDefault();
     guardar.disabled = true;
+    if (panelFotos) panelFotos.disabled = true;
     estado.textContent = 'Guardando…';
     try {
       const datos = {};
@@ -791,10 +922,11 @@ function editar(visita, clave, registro, contenedor) {
           if (archivo && archivo !== control.archivo) {
             const imagen = await prepararImagen(archivo);
             const res = await api('adjunto', { codigo: visita.codigo, body: { imagen } });
-            control.ruta = (await res.json()).ruta;
+            control.rutaSubida = (await res.json()).ruta;
             control.archivo = archivo;
           }
-          if (control.ruta && (archivo || !quitar?.checked)) datos[campo.id] = control.ruta;
+          if (archivo) datos[campo.id] = control.rutaSubida;
+          else if (control.ruta && !quitar?.checked) datos[campo.id] = control.ruta;
         } else {
           const valor = input.value.trim();
           const baseValor = String(base[campo.id] ?? '').trim();
@@ -832,6 +964,7 @@ function editar(visita, clave, registro, contenedor) {
       estado.textContent = error.message;
     } finally {
       guardar.disabled = !conflicto.hidden;
+      if (panelFotos) panelFotos.disabled = false;
     }
   });
 }

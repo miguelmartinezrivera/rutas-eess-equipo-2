@@ -59,7 +59,7 @@ function SeccionFicha({ seccion, indice, abierta, alternar, agregarAmbiente, sol
   const { clave, nombre, bloques } = seccion;
   const equipamiento = clave === 'equipamiento';
   const montarFormulario = bloques[0]?.montarFormulario;
-  const avanceParametros = bloques[0]?.avanceParametros;
+  const avanceSeccion = bloques[0]?.avanceSeccion;
   const completos = bloques.filter(bloque => bloque.completo).length;
   const completa = bloques.length > 0 && completos === bloques.length;
   const ocultar = soloPendientes && completa;
@@ -92,7 +92,7 @@ function SeccionFicha({ seccion, indice, abierta, alternar, agregarAmbiente, sol
           <span className="nombre-ficha">{nombre}</span>
           <span className="estado-ficha" data-registrado={completa}>
             {equipamiento ? bloques.length + ' confirmados · ' + completos + ' completos' :
-              avanceParametros ? avanceParametros.llenados + ' de ' + avanceParametros.total + ' parámetros' :
+              avanceSeccion ? avanceSeccion.llenados + ' de ' + avanceSeccion.total + ' ' + avanceSeccion.unidad :
                 completa ? 'Registrado' : 'Pendiente'}
           </span>
           <span className="flecha-ficha" aria-hidden="true" />
