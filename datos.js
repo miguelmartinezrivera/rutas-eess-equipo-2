@@ -153,74 +153,6 @@ const visitas = [
     "dia": 5
   },
   {
-    "codigo": "00013552",
-    "nombre": "AGOCAS",
-    "categoria": "I-2",
-    "diresa": "LA LIBERTAD / LA LIBERTAD",
-    "provincia": "Sánchez Carrión",
-    "distrito": "MARCABAL",
-    "red": "RED SANCHEZ CARRION",
-    "microred": "MARCABALITO",
-    "direccion": "OTROS CASERIO SHAYAPUNCO DISTRITO MARCABAL PROVINCIA SANCHEZ CARRION DEPARTAMENTO LA LIBERTAD",
-    "gps": "-7.74284817, -77.97347656",
-    "director": "MARCELIANO GARCIA, KELY",
-    "ti": "RUTH DEL ROSARIO LOPEZ CORREA",
-    "his": null,
-    "estado": "Pendiente",
-    "dia": 6
-  },
-  {
-    "codigo": "00013825",
-    "nombre": "CHAQUILBAMBA",
-    "categoria": "I-2",
-    "diresa": "LA LIBERTAD / LA LIBERTAD",
-    "provincia": "Sánchez Carrión",
-    "distrito": "MARCABAL",
-    "red": "RED SANCHEZ CARRION",
-    "microred": "MARCABALITO",
-    "direccion": "AVENIDA AVENIDA TUPAC AMARU # 115 CENTRO POBLADO CHAQUILBAMBA DISTRITO MARCABAL PROVINCIA SANCHEZ CARRION DEPARTAMENTO LA LIBERTAD",
-    "gps": "-7.72782218, -77.99726693",
-    "director": "MARCELIANO GARCIA, KELY",
-    "ti": "RUTH DEL ROSARIO LOPEZ CORREA",
-    "his": null,
-    "estado": "Pendiente",
-    "dia": 6
-  },
-  {
-    "codigo": "00013794",
-    "nombre": "LLUCHUBAMBA",
-    "categoria": "I-2",
-    "diresa": "LA LIBERTAD / LA LIBERTAD",
-    "provincia": "Sánchez Carrión",
-    "distrito": "MARCABAL",
-    "red": "RED SANCHEZ CARRION",
-    "microred": "MARCABALITO",
-    "direccion": "OTROS CASERIO LLUCHUBAMBA S/N NUMERO S/N DISTRITO MARCABAL PROVINCIA SANCHEZ CARRION DEPARTAMENTO LA LIBERTAD",
-    "gps": "-7.66657882, -77.92129452",
-    "director": "MARCELIANO GARCIA, KELY",
-    "ti": "RUTH DEL ROSARIO LOPEZ CORREA",
-    "his": null,
-    "estado": "Pendiente",
-    "dia": 7
-  },
-  {
-    "codigo": "00005358",
-    "nombre": "MARCABALITO",
-    "categoria": "I-3",
-    "diresa": "LA LIBERTAD / LA LIBERTAD",
-    "provincia": "Sánchez Carrión",
-    "distrito": "MARCABAL",
-    "red": "RED SANCHEZ CARRION",
-    "microred": "MARCABALITO",
-    "direccion": "AVENIDA AV. SEÑOR DE LA MISERICORDIA S/N NUMERO S/N DISTRITO MARCABAL PROVINCIA SANCHEZ CARRION DEPARTAMENTO LA LIBERTAD",
-    "gps": "-7.70530154, -78.03458084",
-    "director": "MARCELIANO GARCIA, KELY",
-    "ti": "RUTH DEL ROSARIO LOPEZ CORREA",
-    "his": null,
-    "estado": "Pendiente",
-    "dia": 7
-  },
-  {
     "codigo": "00017340",
     "nombre": "JOSE CARLOS MARIATEGUI",
     "categoria": "I-1",
@@ -235,7 +167,7 @@ const visitas = [
     "ti": "LUIS MARTIN EXCEQUIEL SERRANO MORALES",
     "his": null,
     "estado": "Pendiente",
-    "dia": 8
+    "dia": 6
   },
   {
     "codigo": "00005342",
@@ -252,7 +184,7 @@ const visitas = [
     "ti": null,
     "his": null,
     "estado": "Pendiente",
-    "dia": 8
+    "dia": 6
   },
   {
     "codigo": "00005344",
@@ -269,7 +201,7 @@ const visitas = [
     "ti": null,
     "his": null,
     "estado": "Pendiente",
-    "dia": 9
+    "dia": 7
   },
   {
     "codigo": "00013577",
@@ -286,7 +218,7 @@ const visitas = [
     "ti": null,
     "his": null,
     "estado": "Pendiente",
-    "dia": 10
+    "dia": 8
   },
   {
     "codigo": "00005332",
@@ -303,7 +235,7 @@ const visitas = [
     "ti": "ING. CARLOS ANTONIO BENITES GARCIA",
     "his": null,
     "estado": "Pendiente",
-    "dia": 11
+    "dia": 9
   },
   {
     "codigo": "00013576",
@@ -320,7 +252,7 @@ const visitas = [
     "ti": null,
     "his": null,
     "estado": "Pendiente",
-    "dia": 11
+    "dia": 9
   },
   {
     "codigo": "00005333",
@@ -337,7 +269,7 @@ const visitas = [
     "ti": null,
     "his": null,
     "estado": "Pendiente",
-    "dia": 12
+    "dia": 10
   },
   {
     "codigo": "00005334",
@@ -354,7 +286,7 @@ const visitas = [
     "ti": "MARÍA LUISA GAVIDIA SANDOVAL",
     "his": null,
     "estado": "Pendiente",
-    "dia": 12
+    "dia": 10
   },
   {
     "codigo": "00017587",
@@ -371,7 +303,7 @@ const visitas = [
     "ti": "ROSA MURGA JARA",
     "his": null,
     "estado": "Pendiente",
-    "dia": 13
+    "dia": 11
   },
   {
     "codigo": "00005338",
@@ -388,7 +320,7 @@ const visitas = [
     "ti": "Juanita Del Pilar Alva Saona",
     "his": null,
     "estado": "Pendiente",
-    "dia": 14
+    "dia": 12
   },
   {
     "codigo": "00005346",
@@ -405,7 +337,7 @@ const visitas = [
     "ti": null,
     "his": null,
     "estado": "Pendiente",
-    "dia": 14
+    "dia": 12
   },
   {
     "codigo": "00005337",
@@ -420,6 +352,74 @@ const visitas = [
     "gps": "-8.13290167, -78.05540833",
     "director": "ADRIANA LIZBETH VIVAR BALCAZAR",
     "ti": "LEDIN ELOY MONTOYA TOLENTINO",
+    "his": null,
+    "estado": "Pendiente",
+    "dia": 13
+  },
+  {
+    "codigo": "00005340",
+    "nombre": "SANTA CLARA DE TULPO",
+    "categoria": "I-2",
+    "diresa": "LA LIBERTAD / LA LIBERTAD",
+    "provincia": "Santiago de Chuco",
+    "distrito": "MOLLEBAMBA",
+    "red": null,
+    "microred": null,
+    "direccion": "OTROS LUIS DE LA PUENTE UCEDA S/N NUMERO S/N DISTRITO MOLLEBAMBA PROVINCIA SANTIAGO DE CHUCO DEPARTAMENTO LA LIBERTAD",
+    "gps": "-8.14720167, -77.99519833",
+    "director": "DANIEL ANTONIO VALDERRAMA MEREJILDO",
+    "ti": null,
+    "his": null,
+    "estado": "Pendiente",
+    "dia": 14
+  },
+  {
+    "codigo": "00005339",
+    "nombre": "MOLLEBAMBA",
+    "categoria": "I-2",
+    "diresa": "LA LIBERTAD / LA LIBERTAD",
+    "provincia": "Santiago de Chuco",
+    "distrito": "MOLLEBAMBA",
+    "red": null,
+    "microred": null,
+    "direccion": "OTROS SAN MARTIN S/N NUMERO S/N DISTRITO MOLLEBAMBA PROVINCIA SANTIAGO DE CHUCO DEPARTAMENTO LA LIBERTAD",
+    "gps": "-8.16955167, -77.97464833",
+    "director": "AMARO OLLERO MARIELA LUZ",
+    "ti": null,
+    "his": null,
+    "estado": "Pendiente",
+    "dia": 14
+  },
+  {
+    "codigo": "00017586",
+    "nombre": "LA YEGUADA",
+    "categoria": "I-2",
+    "diresa": "LA LIBERTAD / LA LIBERTAD",
+    "provincia": "Santiago de Chuco",
+    "distrito": "MOLLEPATA",
+    "red": null,
+    "microred": null,
+    "direccion": "OTROS CASERIO LAYEGUADA DISTRITO MOLLEPATA PROVINCIA SANTIAGO DE CHUCO DEPARTAMENTO LA LIBERTAD",
+    "gps": "-8.17070333, -77.95627167",
+    "director": "DANIELA SANDOVAL PAREDES",
+    "ti": null,
+    "his": null,
+    "estado": "Pendiente",
+    "dia": 15
+  },
+  {
+    "codigo": "00005341",
+    "nombre": "MOLLEPATA",
+    "categoria": "I-2",
+    "diresa": "LA LIBERTAD / LA LIBERTAD",
+    "provincia": "Santiago de Chuco",
+    "distrito": "MOLLEPATA",
+    "red": null,
+    "microred": null,
+    "direccion": "OTROS ALFONSO UGARTE S/N NUMERO S/N DISTRITO MOLLEPATA PROVINCIA SANTIAGO DE CHUCO DEPARTAMENTO LA LIBERTAD",
+    "gps": "-8.19410167, -77.95727667",
+    "director": "PEDRO CESAR MARIN BENITES",
+    "ti": null,
     "his": null,
     "estado": "Pendiente",
     "dia": 15
