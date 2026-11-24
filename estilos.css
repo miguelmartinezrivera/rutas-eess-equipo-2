@@ -130,6 +130,16 @@ dd{margin:.25rem 0 0;font-size:.88rem}
 .form-campo input:not([type="checkbox"]),.form-campo textarea{display:block;width:100%;padding:.55rem;
   margin-top:.3rem;border:1px solid #a7b9cd;border-radius:.5rem;min-height:44px;font:inherit;background:white;color:inherit}
 .form-campo textarea{min-height:90px;resize:vertical}
+.tarjeta-parametro{min-width:0;padding:.7rem;border:1px solid #d9e3ee;border-radius:.55rem}
+.tarjeta-parametro[data-llenado="true"]{background:#eaf6ed;border-color:#a9d4b4}
+#dialogo-campo .tarjeta-parametro h4{margin:0 0 .55rem;line-height:1.35}
+.pie-parametro{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.6rem;
+  padding-top:.45rem;border-top:1px solid #bbcdd870;color:#4a617a;font-size:.82rem}
+.pie-parametro .icono-equipo{background:transparent}
+.modal-observacion-parametro{width:min(100% - 1.5rem,29rem);font-size:1rem}
+.modal-observacion-parametro h3{margin:0 0 .85rem;font-size:1.2rem}
+.modal-observacion-parametro textarea{min-height:8rem;font-size:1rem}
+.modal-observacion-parametro .controles-campo{justify-content:flex-end;margin-top:.85rem}
 .form-equipamiento{grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
 .form-equipamiento > :not(.campo-equipo){grid-column:1/-1}
 .form-equipamiento .campo-equipo{display:flex;flex-direction:column;justify-content:space-between;gap:.45rem;

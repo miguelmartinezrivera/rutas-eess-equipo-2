@@ -411,12 +411,22 @@ function mostrarFicha(visita, { registros, referencia }, montarFicha) {
       const llenados = cantidades.filter(({ id }) => Number.isInteger(datos[id])).length;
       equipamiento = { llenados, total: cantidades.length, observaciones: datos.observaciones?.trim() || '' };
     }
+    const parametros = definicion.campos.filter(campo => campo.id.startsWith('existente_'));
+    const avanceParametros = parametros.length ? {
+      total: parametros.length,
+      llenados: parametros.filter(({ id }) => datos[id]?.trim()).length
+    } : null;
     return {
       clave,
       nombre: registro?.ambiente ?? definicion.nombre,
       registrado,
-      completo: equipamiento ? equipamiento.llenados === equipamiento.total : registrado,
+      completo: avanceParametros ? avanceParametros.llenados === avanceParametros.total :
+        equipamiento ? equipamiento.llenados === equipamiento.total : registrado,
       equipamiento,
+      avanceParametros,
+      montarFormulario: avanceParametros ? contenedor => {
+        if (contenedor) editar(visita, clave, registro, contenedor);
+      } : null,
       asignado: registro?.asignado_a ? nombrePersona(registro.asignado_a) : '',
       auditoria: auditoria(registro),
       ver: registrado ? () => verRegistro(visita, clave, registro) : null,
@@ -634,7 +644,50 @@ async function prepararImagen(archivo) {
   }
 }
 
-function editar(visita, clave, registro) {
+function observacionParametro(parametro, campo, { label, input }) {
+  const pie = nodo('div', '', 'pie-parametro');
+  const estado = nodo('span');
+  estado.setAttribute('aria-live', 'polite');
+  const modal = nodo('dialog', '', 'modal-observacion-parametro');
+  const titulo = nodo('h3', 'Observación');
+  titulo.id = 'titulo-parametro-' + campo.id;
+  modal.setAttribute('aria-labelledby', titulo.id);
+  input.autofocus = true;
+  let valorAnterior;
+  const abrir = boton('', () => {
+    valorAnterior = input.value;
+    modal.showModal();
+  }, 'secundario accion-icono');
+  abrir.append(iconoEquipo('observaciones'));
+  abrir.setAttribute('aria-haspopup', 'dialog');
+  function actualizarEstado() {
+    const tieneObservacion = Boolean(input.value.trim());
+    estado.textContent = tieneObservacion ? 'Observación agregada' : 'Sin observaciones';
+    const accion = tieneObservacion ? 'Editar observación' : 'Agregar observación';
+    abrir.title = accion;
+    abrir.setAttribute('aria-label', accion + ' de ' + parametro);
+  }
+  const cancelar = () => {
+    input.value = valorAnterior;
+    modal.close();
+  };
+  const acciones = nodo('div', '', 'controles-campo');
+  acciones.append(boton('Cancelar', cancelar), boton('Aplicar', () => {
+    input.value = input.value.trim();
+    modal.close();
+    actualizarEstado();
+  }, 'primario'));
+  modal.addEventListener('cancel', evento => {
+    evento.preventDefault();
+    cancelar();
+  });
+  modal.append(titulo, label, acciones);
+  pie.append(estado, abrir, modal);
+  actualizarEstado();
+  return pie;
+}
+
+function editar(visita, clave, registro, contenedor) {
   const definicion = definirBloque(clave);
   const inventario = esAmbiente(clave);
   const form = nodo('form', '', inventario ? 'form-campo form-equipamiento' : 'form-campo');
@@ -646,8 +699,13 @@ function editar(visita, clave, registro) {
   const estado = aviso();
   const base = clave === 'generales' ? visita : {};
   const inicial = { ...base, ...registro?.datos };
+  let tarjetaParametro;
+  let nombreParametro;
   const campos = definicion.campos.map(campo => {
-    const control = entrada(campo, inicial[campo.id], inventario);
+    const esParametro = contenedor && campo.id.startsWith('existente_');
+    if (esParametro) nombreParametro = campo.etiqueta;
+    const etiqueta = contenedor ? (esParametro ? 'Existente' : nombreParametro) : campo.etiqueta;
+    const control = entrada({ ...campo, etiqueta }, inicial[campo.id], inventario);
     if (inventario) {
       control.label.classList.add('campo-equipo');
       if (campo.tipo === 'textarea') control.label.classList.add('wide');
@@ -667,7 +725,27 @@ function editar(visita, clave, registro) {
         return { campo, ...control };
       }
     }
-    form.append(control.label);
+    if (contenedor) {
+      if (esParametro) {
+        const tarjeta = nodo('div', '', 'tarjeta-parametro');
+        const titulo = nodo('h4', nombreParametro);
+        titulo.id = 'titulo-parametro-' + campo.id;
+        tarjeta.setAttribute('role', 'group');
+        tarjeta.setAttribute('aria-labelledby', titulo.id);
+        tarjeta.append(titulo, control.label);
+        const actualizarEstado = () => {
+          tarjeta.dataset.llenado = String(Boolean(control.input.value.trim()));
+        };
+        actualizarEstado();
+        control.input.addEventListener('input', actualizarEstado);
+        form.append(tarjeta);
+        tarjetaParametro = tarjeta;
+      } else {
+        tarjetaParametro.append(observacionParametro(nombreParametro, campo, control));
+      }
+    } else {
+      form.append(control.label);
+    }
     return { campo, ...control };
   });
   const confirmar = nodo('input');
@@ -680,7 +758,8 @@ function editar(visita, clave, registro) {
     form.append(label);
   }
   let version = registro?.version || 0;
-  const guardar = nodo('button', 'Guardar', 'primario');
+  const textoGuardar = { red: 'Guardar datos de red', electricidad: 'Guardar datos eléctricos' };
+  const guardar = nodo('button', textoGuardar[clave] ?? 'Guardar', 'primario');
   const conflicto = nodo('section', '', 'conflicto-campo');
   conflicto.hidden = true;
   const volver = boton('Volver a la ficha', () => abrirLevantamiento(visita));
@@ -695,8 +774,9 @@ function editar(visita, clave, registro) {
   const nombre = registro?.ambiente ?? definicion.nombre;
   const historial = auditoria(registro);
   const elementos = historial ? [nodo('p', historial), form] : [form];
-  if (!inventario) elementos.push(volver);
-  const idVista = mostrar(nombre, ...elementos);
+  if (!inventario && !contenedor) elementos.push(volver);
+  if (contenedor) contenedor.replaceChildren(form);
+  const idVista = contenedor ? vista : mostrar(nombre, ...elementos);
   form.addEventListener('submit', async evento => {
     evento.preventDefault();
     guardar.disabled = true;
@@ -725,7 +805,7 @@ function editar(visita, clave, registro) {
       }
       const res = await api('guardar', { codigo: visita.codigo, body: { bloque: clave, version, datos } });
       const resultado = await res.json();
-      if (idVista !== vista || !dialogo.open) return;
+      if (idVista !== vista || !dialogo.open || !form.isConnected) return;
       if (resultado.conflicto) {
         const actual = resultado.registro;
         if (!actual || actual.retirado) {
@@ -737,7 +817,7 @@ function editar(visita, clave, registro) {
         conflicto.hidden = false;
         conflicto.replaceChildren(nodo('h3', 'Versión guardada'), nodo('p', auditoria(actual)),
           valores(visita, clave, actual, estado),
-          boton('Usar la versión guardada', () => editar(visita, clave, actual)),
+          boton('Usar la versión guardada', () => editar(visita, clave, actual, contenedor)),
           boton('Conservar mi edición después de revisar', () => {
             version = actual.version;
             conflicto.hidden = true;

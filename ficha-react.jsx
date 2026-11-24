@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 const numerales = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
@@ -37,10 +38,10 @@ function BloqueFicha({ bloque, mostrarNombre }) {
         </span>}
       </div>
       <div className="controles-campo acciones-bloque">
-        {bloque.ver ? <>
+        {!bloque.montarFormulario && (bloque.ver ? <>
           <button type="button" className="secundario" onClick={bloque.ver}>Ver registro</button>
           <AccionIcono accion="Editar" nombre={bloque.nombre} alPulsar={bloque.editar} />
-        </> : <button type="button" className="primario" onClick={bloque.editar}>Registrar</button>}
+        </> : <button type="button" className="primario" onClick={bloque.editar}>Registrar</button>)}
         <AccionIcono accion="Asignar" nombre={bloque.nombre} alPulsar={bloque.asignar} />
         {bloque.quitar && <AccionIcono accion="Quitar" nombre={bloque.nombre} alPulsar={bloque.quitar} />}
       </div>
@@ -57,20 +58,42 @@ function BloqueFicha({ bloque, mostrarNombre }) {
 function SeccionFicha({ seccion, indice, abierta, alternar, agregarAmbiente, soloPendientes }) {
   const { clave, nombre, bloques } = seccion;
   const equipamiento = clave === 'equipamiento';
+  const montarFormulario = bloques[0]?.montarFormulario;
+  const avanceParametros = bloques[0]?.avanceParametros;
   const completos = bloques.filter(bloque => bloque.completo).length;
   const completa = bloques.length > 0 && completos === bloques.length;
-  if (soloPendientes && completa) return null;
-  const visibles = soloPendientes ? bloques.filter(bloque => !bloque.completo) : bloques;
+  const ocultar = soloPendientes && completa;
+  if (ocultar && !montarFormulario) return null;
+  const visibles = soloPendientes && !montarFormulario ? bloques.filter(bloque => !bloque.completo) : bloques;
   const cabecera = 'cabecera-ficha-' + clave;
   const contenido = 'panel-ficha-' + clave;
+
+  function abrirOCerrar(evento) {
+    if (abierta || !montarFormulario) {
+      alternar();
+      return;
+    }
+    flushSync(alternar);
+    const encabezado = evento.currentTarget;
+    const dialogo = encabezado.closest('dialog');
+    document.getElementById(contenido)?.querySelector('.tarjeta-parametro input')?.focus({ preventScroll: true });
+    if (dialogo) {
+      const margen = parseFloat(getComputedStyle(dialogo).paddingTop);
+      const desplazamiento = encabezado.getBoundingClientRect().top - dialogo.getBoundingClientRect().top;
+      dialogo.scrollTop += desplazamiento - margen;
+    }
+  }
+
   return (
-    <section className="seccion-ficha" data-registrado={completa}>
+    <section className="seccion-ficha" data-registrado={completa} hidden={ocultar}>
       <h3>
-        <button type="button" className="cabecera-ficha" id={cabecera} aria-expanded={abierta} aria-controls={contenido} onClick={alternar}>
+        <button type="button" className="cabecera-ficha" id={cabecera} aria-expanded={abierta} aria-controls={contenido} onClick={abrirOCerrar}>
           <span className="numero-ficha">{numerales[indice]}</span>
           <span className="nombre-ficha">{nombre}</span>
           <span className="estado-ficha" data-registrado={completa}>
-            {equipamiento ? bloques.length + ' confirmados · ' + completos + ' completos' : completa ? 'Registrado' : 'Pendiente'}
+            {equipamiento ? bloques.length + ' confirmados · ' + completos + ' completos' :
+              avanceParametros ? avanceParametros.llenados + ' de ' + avanceParametros.total + ' parámetros' :
+                completa ? 'Registrado' : 'Pendiente'}
           </span>
           <span className="flecha-ficha" aria-hidden="true" />
         </button>
@@ -81,6 +104,7 @@ function SeccionFicha({ seccion, indice, abierta, alternar, agregarAmbiente, sol
           {equipamiento && !bloques.length && <p className="contexto-ficha">Aún no hay ambientes confirmados para este establecimiento.</p>}
           {visibles.map(bloque => <BloqueFicha key={bloque.clave} bloque={bloque} mostrarNombre={equipamiento} />)}
         </>}
+        {montarFormulario && <div ref={montarFormulario} />}
       </div>
     </section>
   );
